@@ -56,4 +56,9 @@ void display_rigth(String text){
   }while (display2.nextPage());  
   delay(1000);
 }
-
+//const char* read_temperature(){
+//  float temperature = dht.readTemperature();
+//  char buffer[10] = {};
+//  sprintf(buffer, "%f", temperature );
+//  return buffer;
+//}
