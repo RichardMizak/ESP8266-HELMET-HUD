@@ -3,8 +3,9 @@
 #include <NTPClient.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <TinyGPSPlus.h>
+#include <SoftwareSerial.h>
 #include "DHT.h"
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
@@ -23,22 +24,27 @@ String NTPtime();
 DHT dht(DHTPIN, DHTTYPE);
 int read_temperature();
 
+static const int RXPin = 4, TXPin = 3;
+static const uint32_t GPSBaud = 9600;
+
+TinyGPSPlus gps;
+double get_speed();
+
+SoftwareSerial ss(RXPin, TXPin);
+
 const char *ssid     = "Wavex";
 const char *password = "WaveX123";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-Adafruit_MPU6050 mpu;
-
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C display1(U8G2_MIRROR, /* reset=*/ U8X8_PIN_NONE, D1, D2);
-//U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C display2(U8G2_MIRROR, /* reset=*/ U8X8_PIN_NONE, D1, D2);
-//U8G2_SSD1306_128X32_UNIVISION_1_SW_I2C display1(U8G2_MIRROR, /* clock=*/ 1, /* data=*/ 2, /* reset=*/ U8X8_PIN_NONE);
 U8G2_SSD1306_128X32_UNIVISION_1_SW_I2C display2(U8G2_MIRROR, /* clock=*/ D4, /* data=*/ D5, /* reset=*/ U8X8_PIN_NONE);
 
 void setup() {
   Serial.begin(115200);
   dht.begin();
+  ss.begin(GPSBaud);
   WiFi.begin(ssid, password);
 
   while ( WiFi.status() != WL_CONNECTED ) {
@@ -54,26 +60,22 @@ void setup() {
   display2.begin();
   display1.setFont(u8g2_font_inr30_mf);
   display2.setFont(u8g2_font_inr30_mf);
-  /*
-  if (!mpu.begin()) {
-    Serial.println("Failed to find MPU6050 chip");
-    while (1) {
-      delay(10);
-    }
-  }
 
-  mpu.setHighPassFilter(MPU6050_HIGHPASS_0_63_HZ);
-  mpu.setMotionDetectionThreshold(1);
-  mpu.setMotionDetectionDuration(20);
-  mpu.setInterruptPinLatch(true);
-  mpu.setInterruptPinPolarity(true);
-  mpu.setMotionInterrupt(true);
-  */
+  
 }
 
 void loop() {
-  display_left();
-  display_rigth();
+   while (ss.available() > 0)
+    if (gps.encode(ss.read()))
+       display_left();
+       display_rigth();
+
+  if (millis() > 5000 && gps.charsProcessed() < 10)
+  {
+    Serial.println(F("No GPS detected: check wiring."));
+    while(true);
+  }
+  
   
 }
 
@@ -98,7 +100,6 @@ void display_rigth()
     display1.print(read_temperature());
     display1.print(char(176));
     display1.print("C");
-    //display1.print(get_acceleration());
     display1.sendBuffer();
   }while (display1.nextPage());  
   delay(2000);
@@ -120,15 +121,7 @@ String NTPtime(){
   return x_time;
 }
 
-String get_acceleration(){
-  char* speed;
-  if(mpu.getMotionInterruptStatus()) {
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-    float x = a.acceleration.x;
-    float y = a.acceleration.y;
-    float z = a.acceleration.z;
-    sprintf(speed, "%f, %f, %f" ,x,y,z);
-  }
+double get_speed(){
+  double speed = gps.speed.kmph();
   return speed;
 }
