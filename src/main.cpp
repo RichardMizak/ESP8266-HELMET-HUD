@@ -4,18 +4,14 @@
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
 #include "DHT.h"
-#ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
-#endif
-#ifdef U8X8_HAVE_HW_I2C
 #include <Wire.h>
-#endif
+
 
 #define DHTPIN 12
 #define DHTTYPE DHT22
 
 int button = D1;
-int status = false;
 
 void display_left();
 void display_rigth_speed();
@@ -39,7 +35,7 @@ void setup() {
   Serial.begin(115200);
   dht.begin();
   ss.begin(GPSBaud);
-  pinMode(button, INPUT);
+  pinMode(button, INPUT_PULLUP);
   display1.begin();
   display2.begin();
   display1.setFont(u8g2_font_inr30_mf);
@@ -51,24 +47,23 @@ void setup() {
 void loop() {
    while (ss.available() > 0)
     if (gps.encode(ss.read()))
-      if (digitalRead(button) == true){
-        status = !status;
-        if (status){
+      if (digitalRead(button) == LOW){
           display_left();
           display_rigth_speed();
-        }else{
+        }else if (digitalRead(button) == HIGH)
+        {
           display_left();
           display_rigth_temp();
         }
-      }   
+               
   if (millis() > 5000 && gps.charsProcessed() < 10)
   {
     Serial.println(F("No GPS detected: check wiring."));
     while(true);
   }
+} 
   
-  
-}
+
 
 void display_left()
 {
@@ -111,8 +106,6 @@ void display_rigth_temp()
 int read_temperature(){
   float temperature = dht.readTemperature();
   int temperature_int = (int)temperature;
-  Serial.print(temperature_int);
-  delay(2000);
   return temperature;
 }
 
