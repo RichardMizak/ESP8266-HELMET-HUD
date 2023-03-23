@@ -7,26 +7,21 @@
 #include <SPI.h>
 #include <Wire.h>
 
-
 #define DHTPIN 12
 #define DHTTYPE DHT22
-
+DHT dht(DHTPIN, DHTTYPE);
 int button = D1;
+static const int RXPin = 4, TXPin = 3;
+static const uint32_t GPSBaud = 9600;
+TinyGPSPlus gps;
+SoftwareSerial ss(RXPin, TXPin);
 
 void display_left();
 void display_rigth_speed();
 void display_rigth_temp();
-
-DHT dht(DHTPIN, DHTTYPE);
 int read_temperature();
-
-static const int RXPin = 4, TXPin = 3;
-static const uint32_t GPSBaud = 9600;
-
-TinyGPSPlus gps;
 double get_speed();
 void get_time();
-SoftwareSerial ss(RXPin, TXPin);
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C display1(U8G2_MIRROR, /* reset=*/ U8X8_PIN_NONE, D3, D7);
 U8G2_SSD1306_128X32_UNIVISION_1_SW_I2C display2(U8G2_MIRROR, /* clock=*/ D4, /* data=*/ D5, /* reset=*/ U8X8_PIN_NONE);
@@ -39,9 +34,7 @@ void setup() {
   display1.begin();
   display2.begin();
   display1.setFont(u8g2_font_inr30_mf);
-  display2.setFont(u8g2_font_inr30_mf);
-
-  
+  display2.setFont(u8g2_font_inr30_mf);  
 }
 
 void loop() {
@@ -50,20 +43,16 @@ void loop() {
       if (digitalRead(button) == LOW){
           display_left();
           display_rigth_speed();
-        }else if (digitalRead(button) == HIGH)
-        {
+        }else if (digitalRead(button) == HIGH){
           display_left();
           display_rigth_temp();
         }
-               
   if (millis() > 5000 && gps.charsProcessed() < 10)
   {
     Serial.println(F("No GPS detected: check wiring."));
     while(true);
   }
 } 
-  
-
 
 void display_left()
 {
@@ -79,7 +68,7 @@ void display_left()
 
 void display_rigth_speed()
 {
-   display1.firstPage();
+  display1.firstPage();
   do{
     display1.clearBuffer();
     display1.setCursor(0, 32);
@@ -91,7 +80,7 @@ void display_rigth_speed()
 
 void display_rigth_temp()
 {
-   display1.firstPage();
+  display1.firstPage();
   do{
     display1.clearBuffer();
     display1.setCursor(0, 32);
@@ -105,7 +94,6 @@ void display_rigth_temp()
 
 int read_temperature(){
   float temperature = dht.readTemperature();
-  int temperature_int = (int)temperature;
   return temperature;
 }
 
