@@ -27,7 +27,6 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C display1(U8G2_MIRROR, /* reset=*/ U8X8_PI
 U8G2_SSD1306_128X32_UNIVISION_1_SW_I2C display2(U8G2_MIRROR, /* clock=*/ D4, /* data=*/ D5, /* reset=*/ U8X8_PIN_NONE);
 
 void setup() {
-  Serial.begin(115200);
   dht.begin();
   ss.begin(GPSBaud);
   pinMode(button, INPUT_PULLUP);
