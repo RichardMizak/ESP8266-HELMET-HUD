@@ -33,6 +33,7 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
   display1.begin();
   display2.begin();
+  display1.setFlipMode(1);
   display1.setFont(u8g2_font_inr30_mf);
   display2.setFont(u8g2_font_inr30_mf);  
 }
